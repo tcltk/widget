@@ -1696,10 +1696,10 @@ bind PostConsole <KeyPress> [namespace code {
 ;proc TagProc w {
     upvar \#0 [namespace current]::[winfo parent $w] data
     if {!$data(-lightcmd)} return
-    set exp "\[^\\]\[\[ \t\n\r\;{}\"\$]"
+    set exp "\[^\\\\\]\[\[ \t\n\r\;{}\"\$\]"
     set i [$w search -backwards -regexp $exp insert-1c limit-1c]
     if {[string compare {} $i]} {append i +2c} {set i limit}
-    regsub -all {[[\\\?\*]} [$w get $i "insert-1c wordend"] {\\\0} c
+    regsub -all "\[\[\\\\\\?\\*\]" [$w get $i "insert-1c wordend"] {\\\0} c
     if {[string compare {} [EvalAttached info commands [list $c]]]} {
 	$w tag add proc $i "insert-1c wordend"
     } else {
@@ -1837,7 +1837,7 @@ bind PostConsole <KeyPress> [namespace code {
 ## 
 ## FIX: make namespace aware
 ;proc Expand {w {type ""}} {
-    set exp "\[^\\]\[\[ \t\n\r{}\"\$]"
+    set exp "\[^\\\\\]\[\[ \t\n\r\\\{\"\\\\\$\]"
     set tmp [$w search -backwards -regexp $exp insert-1c limit-1c]
     if {[string compare {} $tmp]} {append tmp +2c} else {set tmp limit}
     if {[$w compare $tmp >= insert]} return
