@@ -50,7 +50,7 @@ namespace import -force ::Utility::get_opts*
     set result {}
     set code ok
     switch [llength $arg] {
-	1 { set code [catch {uplevel $arg $args} result] }
+	1 { set code [catch {uplevel 1 $arg $args} result] }
 	0 {
 	    set arg [info commands $prefix*]
 	    regsub -all $prefix $arg {} arg
@@ -84,10 +84,10 @@ proc dump_multi {args} {
     set args [get_opts opts $args {-nocomplain 0} {} 1]
     set code ok
     if {
-	[catch {uplevel ${namesp}::dump var $args} err] &&
-	[catch {uplevel ${namesp}::dump com $args} err] &&
-	[catch {uplevel ${namesp}::dump wid $args} err] &&
-	[catch {uplevel ${namesp}::dump nam $args} err]
+	[catch {uplevel 1 ${namesp}::dump var $args} err] &&
+	[catch {uplevel 1 ${namesp}::dump com $args} err] &&
+	[catch {uplevel 1 ${namesp}::dump wid $args} err] &&
+	[catch {uplevel 1 ${namesp}::dump nam $args} err]
     } {
 	set result "# unable to resolve type for \"$args\"\n"
 	if {!$opts(-nocomplain)} {
@@ -126,19 +126,19 @@ proc dump_command {args} {
     set namesp [namespace current]
     foreach arg $args {
 	if {[string compare {} [set cmds \
-		[uplevel info command [list $arg]]]]} {
+		[uplevel 1 info command [list $arg]]]]} {
 	    foreach cmd [lsort $cmds] {
 		if {[lsearch -exact [interp aliases] $cmd] > -1} {
 		    append result "\#\# ALIAS:   $cmd =>\
 			    [interp alias {} $cmd]\n"
-		} elseif {![catch {uplevel ${namesp}::dump_proc \
+		} elseif {![catch {uplevel 1 ${namesp}::dump_proc \
 			[expr {$opts(-origin)?{-origin}:{}}] \
 			-- [list $cmd]} msg]} {
 		    append result $msg\n
 		} else {
 		    if {$opts(-origin) || [string compare $namesp \
-			    [uplevel namespace current]]} {
-			set cmd [uplevel namespace origin [list $cmd]]
+			    [uplevel 1 namespace current]]} {
+			set cmd [uplevel 1 [list namespace origin $cmd]]
 		    }
 		    append result "\#\# COMMAND: $cmd\n"
 		}
@@ -175,11 +175,11 @@ proc dump_proc {args} {
     set code ok
     set result {}
     foreach arg $args {
-	set procs [uplevel info command [list $arg]]
+	set procs [uplevel 1 info command [list $arg]]
 	set count 0
 	if {[string compare $procs {}]} {
 	    foreach p [lsort $procs] {
-		set cmd [uplevel namespace origin [list $p]]
+		set cmd [uplevel 1 namespace origin [list $p]]
 		set namesp [namespace qualifiers $cmd]
 		if {[string match {} $namesp]} { set namesp :: }
 		if {[string compare [namespace eval $namesp \
@@ -197,7 +197,7 @@ proc dump_proc {args} {
 		    }
 		}
 		if {$opts(-origin) || [string compare $namesp \
-			[uplevel namespace current]]} {
+			[uplevel 1 namespace current]]} {
 		    ## This is ideal, but list can really screw with the
 		    ## format of the body for some procs with odd whitespacing
 		    ## (everything comes out backslashed)
@@ -267,8 +267,8 @@ proc dump_variable {args} {
     # outputs variables value(s), whether array or simple.
     if {![info exists fltr]} { set fltr * }
     foreach arg $args {
-	if {[string match {} [set vars [uplevel info vars [list $arg]]]]} {
-	    if {[uplevel info exists $arg]} {
+	if {![llength [set vars [uplevel 1 info vars [list $arg]]]]} {
+	    if {[uplevel 1 info exists $arg]} {
 		set vars $arg
 	    } elseif {$whine} {
 		append res "\#\# No known variable $arg\n"
@@ -277,7 +277,14 @@ proc dump_variable {args} {
 	    } else { continue }
 	}
 	foreach var [lsort -dictionary $vars] {
-	    set var [uplevel [list namespace which -variable $var]]
+	    if {[uplevel 1 [list info locals $var]] == ""} {
+		# use the proper scope of the var, but namespace which
+		# won't id locals or some upvar'ed vars correctly
+		set new [uplevel 1 [list namespace which -variable $var]]
+		if {$new != ""} {
+		    set var $new
+		}
+	    }
 	    upvar $var v
 	    if {[array exists v] || [catch {string length $v}]} {
 		append res "array set [list $var] \{\n"
@@ -323,7 +330,7 @@ proc dump_namespace {args} {
     set code ok
     set result {}
     foreach arg $args {
-	set cur [uplevel namespace current]
+	set cur [uplevel 1 namespace current]
 	# Namespace search order:
 	# If it starts with ::, try and break it apart and see if we find
 	# children matching the pattern
@@ -390,8 +397,9 @@ proc dump_namespace {args} {
 		    append result \n
 		}
 		if {$opts(-recursive)} {
-		    append result [uplevel [namespace current]::dump_namespace\
-			    [namespace children $name]]
+		    append result [uplevel 1 \
+				       [namespace current]::dump_namespace\
+				       [namespace children $name]]
 		}
 		append result "\}; # end of namespace $name\n\n"
 	    }

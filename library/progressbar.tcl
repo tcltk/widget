@@ -162,6 +162,11 @@ widget create Progressbar -type frame -base canvas -components {
     {-value		value		Value		0}
     {-variable		variable	Variable	{}}
 }
+#{synonym -bd "" "" "" "" -borderwidth 0}
+#{border -borderwidth borderWidth BorderWidth 2 "" "" 0}
+#{font -font font Font "Helvetica 8" "" "" 0}
+#{synonym -fg -foreground}
+#{color -foreground foreground Foreground white "" "" 0}
 
 namespace eval ::Widget::Progressbar {;
 

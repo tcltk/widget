@@ -1,5 +1,5 @@
 ##
-## Copyright 1996-8 Jeffrey Hobbs, jeff.hobbs@acm.org
+## Copyright (c) 1996-2003 Jeffrey Hobbs
 ##
 ## Initiated: 28 October 1996
 ##
@@ -29,7 +29,7 @@ package provide BalloonHelp 2.0
 ## enable OR on
 ##	Enables balloon help for defined widgets.
 ##
-## <widget> ?-index index? ?message?
+## <widget> ?-index index? ?-item id? ?message?
 ##	If -index is specified, then <widget> is assumed to be a menu
 ##	and the index represents what index into the menu (either the
 ##	numerical index or the label) to associate the balloon help
@@ -138,15 +138,28 @@ proc balloonhelp {w args} {
 		set index [lindex $args 1]
 		set args [lreplace $args 0 1]
 	    }
+	    -item	{
+		set namedItem [lindex $args 1]
+		if {[catch {$w find withtag $namedItem} item]} {
+		    return -code error "widget \"$w\" is not a canvas, or item\
+			    \"$namedItem\" does not exist in the canvas"
+		}
+		if {[llength $item] > 1} {
+		    return -code error "item \"$namedItem\" specifies more\
+			    than one item on the canvas"
+		}
+		set args [lreplace $args 0 1]
+	    }
 	    default	{
-		return -code error "unknown option \"$key\": should be -index"
+		return -code error "unknown option \"$key\":\
+			should be -index or -item"
 	    }
 	}
 	set key [lindex $args 0]
     }
     if {[llength $args] != 1} {
 	return -code error "wrong \# args: should be \"balloonhelp widget\
-		?-index index? message\""
+		?-index index? ?-item item? message\""
     }
     if {[string match {} $key]} {
 	clear $w
@@ -158,6 +171,11 @@ proc balloonhelp {w args} {
 	    set BalloonHelp($w,$index) $key
 	    #bindtags $w [linsert [bindtags $w] end BalloonsMenu]
 	    return $w,$index
+	} elseif {[info exists item]} {
+	    set BalloonHelp($w,$item) $key
+	    #bindtags $w [linsert [bindtags $w] end BalloonsCanvas]
+	    enableCanvas $w $item
+	    return $w,$item
 	} else {
 	    set BalloonHelp($w) $key
 	    bindtags $w [linsert [bindtags $w] end Balloons]
@@ -192,7 +210,12 @@ proc balloonhelp {w args} {
     set b $BalloonHelp(TOPLEVEL)
     $b.l configure -text $msg
     update idletasks
-    if {[string compare {} $i]} {
+    if {![string compare cursor $i]} {
+	set y [expr {[winfo pointery $w]+5}]
+	if {($y+[winfo reqheight $b])>[winfo screenheight $w]} {
+	    set y [expr {[winfo pointery $w]-[winfo reqheight $b]-5}]
+	}
+    } elseif {[string compare {} $i]} {
 	set y [expr {[winfo rooty $w]+[winfo vrooty $w]+[$w yposition $i]+25}]
 	if {($y+[winfo reqheight $b])>[winfo screenheight $w]} {
 	    set y [expr {[winfo rooty $w]+[$w yposition $i]-\
@@ -204,8 +227,12 @@ proc balloonhelp {w args} {
 	    set y [expr {[winfo rooty $w]-[winfo reqheight $b]-5}]
 	}
     }
-    set x [expr {[winfo rootx $w]+[winfo vrootx $w]+\
-	    ([winfo width $w]-[winfo reqwidth $b])/2}]
+    if {[string compare cursor $i]} {
+	set x [expr {[winfo rootx $w]+[winfo vrootx $w]+\
+		([winfo width $w]-[winfo reqwidth $b])/2}]
+    } else {
+	set x [expr {[winfo pointerx $w]+([winfo reqwidth $b]/2)}]
+    }
     if {$x<0} {
 	set x 0
     } elseif {($x+[winfo reqwidth $b])>[winfo screenwidth $w]} {
@@ -244,6 +271,23 @@ proc balloonhelp {w args} {
     variable BalloonHelp
     after cancel $BalloonHelp(AFTERID)
     catch {wm withdraw $BalloonHelp(TOPLEVEL)}
+}
+
+;proc itemBalloon {w args} {
+    variable BalloonHelp
+    set BalloonHelp(LAST) -1
+    set item [$w find withtag current]
+    if {$BalloonHelp(enabled) && [info exists BalloonHelp($w,$item)]} {
+	set BalloonHelp(AFTERID) [after $BalloonHelp(DELAY) \
+		[namespace code [list show $w $BalloonHelp($w,$item) cursor]]]
+    }
+}
+
+;proc enableCanvas {w args} {
+    $w bind all <Enter> [namespace code [list itemBalloon $w]]
+    $w bind all <Leave>		[namespace code hide]
+    $w bind all <Any-KeyPress>	[namespace code hide]
+    $w bind all <Any-Button>	[namespace code hide]
 }
 
 }; # end namespace ::Widget::BalloonHelp

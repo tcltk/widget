@@ -373,58 +373,50 @@ proc lintersect {args} {
 
 # every --
 #   Cheap rescheduler
-# every <time> cmd;	# cmd is a one arg (cmd as list)
+# every::schedule <time> cmd;	# cmd is a one arg (cmd as list)
 #	schedules $cmd to be run every <time> 1000ths of a sec
-#	IOW, [every 1000 "puts hello"] prints hello every sec
-# every cancel cmd
-#	cancels a cmd if it was specified
-# every info ?pattern?
+#	IOW, [every::schedule 1000 "puts hello"] prints hello every sec
+# every::cancel pattern
+#	cancels cmd matching the glob pattern
+# every::info ?pattern?
 #	returns info about commands in pairs of "time cmd time cmd ..."
 #
-proc every {time {cmd {}}} {
-    global EVERY
-    if {[regexp {^[0-9]+$} $time]} {
-	# A time was given, so schedule a command to run every $time msecs
-	if {[string compare {} $cmd]} {
-	    set EVERY(TIME,$cmd) $time
-	    set EVERY(CMD,$cmd) [after $time [list every eval $cmd]]
-	} else {
-	    return -code error "wrong \# args: should be \"[lindex [info level 0] 0] <number> command"
-	}
-	return
+namespace eval ::every {}
+proc ::every::schedule {time cmd} {
+    if {![string is integer -strict $time]} {
+	return -code error "usage: [lindex [::info level 0] 0] time command"
     }
-    switch $time {
-	eval {
-	    if {[info exists EVERY(TIME,$cmd)]} {
-		uplevel \#0 $cmd
-		set EVERY(CMD,$cmd) [after $EVERY(TIME,$cmd) \
-			[list every eval $cmd]]
-	    }
-	}
-	cancel {
-	    if {[string match "all" $cmd]} {
-		foreach i [array names EVERY CMD,*] {
-		    after cancel $EVERY($i)
-		    unset EVERY($i) EVERY(TIME,[string range $i 4 end])
-		}
-	    } elseif {[info exists EVERY(CMD,$cmd)]} {
-		after cancel $EVERY(CMD,$cmd)
-		unset EVERY(CMD,$cmd) EVERY(TIME,$cmd)
-	    }
-	}
-	info {
-	    set result {}
-	    foreach i [array names EVERY TIME,$cmd*] {
-		set cmd [string range $i 5 end]
-		lappend result $EVERY($i) $cmd
-	    }
-	    return $result
-	}
-	default {
-	    return -code error "bad option \"$time\": must be cancel, info or a number"
-	}
+    # A time was given, so schedule a command to run every $time msecs
+    variable ID
+    if {[string compare {} $cmd]} {
+	set ID($cmd) [list $time [after $time [list ::every::_do $cmd]]]
     }
-    return
+}
+
+proc ::every::_do {cmd} {
+    variable ID
+    if {[::info exists ID($cmd)]} {
+	uplevel \#0 $cmd
+	set time [lindex $ID($cmd) 0]
+	set ID($cmd) [list $time [after $time [list ::every::_do $cmd]]]
+    }
+}
+
+proc ::every::cancel {pattern} {
+    variable ID
+    foreach i [array names ID $pattern] {
+	after cancel [lindex $ID($i) 1]
+	unset ID($i)
+    }
+}
+
+proc ::every::info {{pattern *}} {
+    variable ID
+    set result {}
+    foreach i [array names ID $pattern] {
+	lappend result [lindex $ID($i) 0] [lindex $ID($i) 1]
+    }
+    return $result
 }
 
 # best_match --
@@ -943,6 +935,34 @@ interp alias {} ::Utility::dir {} namespace inscope ::Utility ls
     ## FIX: should use vinfo and remove any *ensure_default* read traces
     uplevel 1 [list trace vdelete $array r [list \
 	    [namespace code ensure_default] $default]]
+}
+
+# switch-prefix --
+#
+#   ADD COMMENTS HERE
+#
+# Arguments:
+#   args	comments
+# Results:
+#   Returns ...
+#
+proc switch-prefix {what body} {
+    array set opts $body
+    if {[info exists opts($what)]} {
+	set arg $what
+    } else {
+	set arg [array names opts $what*]
+    }
+    set num [llength $arg]
+    if {$num==1} {
+	## FIX one-elem config
+	return [uplevel 1 $opts($arg)]
+    } elseif {$num} {
+	return -code error "ambiguous option \"$what\",\
+		must be one of: [join $arg {, }]"
+    } else {
+	return -code error "unknown option \"$what\""
+    }
 }
 
 

@@ -1,5 +1,5 @@
 ##
-## Copyright 1996-8 Jeffrey Hobbs, jeff.hobbs@acm.org
+## Copyright (c) 1996-2003 Jeffrey Hobbs
 ##
 ## Based off previous work for TkCon
 ##
@@ -398,7 +398,7 @@ variable class
 array set class {
     release	{December 1998}
     contact	"jeff.hobbs@acm.org"
-    docs	"http://www.purl.org/net/hobbs/tcl/script/tkcon/"
+    docs	"http://tkcon.sourceforge.net/"
     slavealias	{ console }
     slaveprocs	{ alias dir dump lremove puts echo unknown tcl_unknown which }
 }
@@ -595,11 +595,11 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 	if {$code} {
 	    $w insert output $cmd\n stderr
 	} else {
-	    ## We are about to evaluate the command, so move the limit
+	    ## We are about to evaluate the command, so move the promptEnd
 	    ## mark to ensure that further <Return>s don't cause double
 	    ## evaluation of this command - for cases like the command
 	    ## has a vwait or something in it
-	    $w mark set limit end
+	    $w mark set promptEnd end
 	    EvalSlave history add $cmd
 	    if {[catch {EvalAttached $cmd} res]} {
 		if {[catch {EvalAttached {set errorInfo}} err]} {
@@ -637,9 +637,9 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 # Returns:	text which compromises current command line
 ## 
 ;proc CmdGet w {
-    if {[string match {} [$w tag nextrange prompt limit end]]} {
-	$w tag add stdin limit end-1c
-	return [$w get limit end-1c]
+    if {[string match {} [$w tag nextrange prompt promptEnd end]]} {
+	$w tag add stdin promptEnd end-1c
+	return [$w get promptEnd end-1c]
     }
 }
 
@@ -694,8 +694,8 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
     }
     $w mark set output $i
     $w mark set insert end
-    $w mark set limit insert
-    $w mark gravity limit left
+    $w mark set promptEnd insert
+    $w mark gravity promptEnd left
     if {[string compare {} $post]} { $w insert end $post stdin }
     $w see end
 }
@@ -921,8 +921,8 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 	set lbl [lindex [split $tmp "\n"] 0]
 	if {[string len $lbl]>32} { set lbl [string range $tmp 0 29]... }
 	$w add command -label "$id: $lbl" -command [namespace code "
-	$con delete limit end
-	$con insert limit [list $tmp]
+	$con delete promptEnd end
+	$con insert promptEnd [list $tmp]
 	$con see end
 	Eval $con\n"]
     }
@@ -1002,9 +1002,9 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
     if {[string match {} $data(cmdsave)]} {
 	set data(cmdsave) $tmp
     } else {
-	$w delete limit end-1c
+	$w delete promptEnd end-1c
     }
-    $w insert limit $tmp
+    $w insert promptEnd $tmp
     $w see end
 }
 
@@ -1130,14 +1130,14 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 	    ## Search history forward
 	    while {$event < $nextid} {
 		if {[incr event] == $nextid} {
-		    $w delete limit end
-		    $w insert limit $data(cmdbuf)
+		    $w delete promptEnd end
+		    $w insert promptEnd $data(cmdbuf)
 		    break
 		} elseif {![catch {EvalSlave history event $event} res] \
 			&& ![string compare $data(cmdbuf) \
 			[string range $res 0 $len]]} {
-		    $w delete limit end
-		    $w insert limit $res
+		    $w delete promptEnd end
+		    $w insert promptEnd $res
 		    break
 		}
 	    }
@@ -1147,8 +1147,8 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 	    while {![catch {EvalSlave history event [incr event -1]} res]} {
 		if {![string compare $data(cmdbuf) \
 			[string range $res 0 $len]]} {
-		    $w delete limit end
-		    $w insert limit $res
+		    $w delete promptEnd end
+		    $w insert promptEnd $res
 		    set data(event) $event
 		    break
 		}
@@ -1159,11 +1159,11 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 	if {$int > 0} {
 	    ## Goto next command in history
 	    if {$data(event) < $nextid} {
-		$w delete limit end
+		$w delete promptEnd end
 		if {[incr data(event)] == $nextid} {
-		    $w insert limit $data(cmdbuf)
+		    $w insert promptEnd $data(cmdbuf)
 		} else {
-		    $w insert limit [EvalSlave history event $data(event)]
+		    $w insert promptEnd [EvalSlave history event $data(event)]
 		}
 	    }
 	} else {
@@ -1172,8 +1172,8 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 	    if {[catch {EvalSlave history event [incr data(event) -1]} res]} {
 		incr data(event)
 	    } else {
-		$w delete limit end
-		$w insert limit $res
+		$w delete promptEnd end
+		$w insert promptEnd $res
 	    }
 	}
     }
@@ -1444,7 +1444,7 @@ switch -glob $tcl_platform(platform) {
 	clipboard clear -displayof $w
 	catch {
 	    clipboard append -displayof $w [selection get -displayof $w]
-	    if {[$w compare sel.first >= limit]} {$w delete sel.first sel.last}
+	    if {[$w compare sel.first >= promptEnd]} {$w delete sel.first sel.last}
 	}
     }
 }
@@ -1461,7 +1461,7 @@ switch -glob $tcl_platform(platform) {
 	![catch {selection get -displayof $w -type TEXT} tmp] ||
 	![catch {selection get -displayof $w -selection CLIPBOARD} tmp]
     } {
-	if {[$w compare insert < limit]} {$w mark set insert end}
+	if {[$w compare insert < promptEnd]} {$w mark set insert end}
 	$w insert insert $tmp
 	$w see insert
 	if {[string match *\n* $tmp]} {Eval $w}
@@ -1524,39 +1524,39 @@ catch {
 }
 
 bind Console <<Console_Expand>> [namespace code {
-    if {[%W compare insert > limit]} {Expand %W}
+    if {[%W compare insert > promptEnd]} {Expand %W}
     break
 }]
 bind Console <<Console_ExpandFile>> [namespace code {
-    if {[%W compare insert > limit]} {Expand %W path}
+    if {[%W compare insert > promptEnd]} {Expand %W path}
     break
 }]
 bind Console <<Console_ExpandProc>> [namespace code {
-    if {[%W compare insert > limit]} {Expand %W proc}
+    if {[%W compare insert > promptEnd]} {Expand %W proc}
     break
 }]
 bind Console <<Console_ExpandVar>> [namespace code {
-    if {[%W compare insert > limit]} {Expand %W var}
+    if {[%W compare insert > promptEnd]} {Expand %W var}
     break
 }]
 bind Console <<Console_Tab>> [namespace code {
-    if {[%W compare insert >= limit]} {	Insert %W \t }
+    if {[%W compare insert >= promptEnd]} {	Insert %W \t }
 }]
 bind Console <<Console_Eval>> [namespace code { Eval %W }]
 bind Console <Delete> {
     if {[string compare {} [%W tag nextrange sel 1.0 end]] \
-	    && [%W compare sel.first >= limit]} {
+	    && [%W compare sel.first >= promptEnd]} {
 	%W delete sel.first sel.last
-    } elseif {[%W compare insert >= limit]} {
+    } elseif {[%W compare insert >= promptEnd]} {
 	%W delete insert
 	%W see insert
     }
 }
 bind Console <BackSpace> {
     if {[string compare {} [%W tag nextrange sel 1.0 end]] \
-	    && [%W compare sel.first >= limit]} {
+	    && [%W compare sel.first >= promptEnd]} {
 	%W delete sel.first sel.last
-    } elseif {[%W compare insert != 1.0] && [%W compare insert > limit]} {
+    } elseif {[%W compare insert != 1.0] && [%W compare insert > promptEnd]} {
 	%W delete insert-1c
 	%W see insert
     }
@@ -1566,18 +1566,18 @@ bind Console <Control-h> [bind Console <BackSpace>]
 bind Console <KeyPress> [namespace code { Insert %W %A }]
 
 bind Console <Control-a> {
-    if {[%W compare {limit linestart} == {insert linestart}]} {
-	tkTextSetCursor %W limit
+    if {[%W compare {promptEnd linestart} == {insert linestart}]} {
+	tkTextSetCursor %W promptEnd
     } else {
 	tkTextSetCursor %W {insert linestart}
     }
 }
 bind Console <Control-d> {
-    if {[%W compare insert < limit]} break
+    if {[%W compare insert < promptEnd]} break
     %W delete insert
 }
 bind Console <<Console_KillLine>> {
-    if {[%W compare insert < limit]} break
+    if {[%W compare insert < promptEnd]} break
     if {[%W compare insert == {insert lineend}]} {
 	%W delete insert
     } else {
@@ -1586,7 +1586,7 @@ bind Console <<Console_KillLine>> {
 }
 bind Console <<Console_Clear>> [namespace code { _clear [winfo parent %W] }]
 bind Console <<Console_Prev>> [namespace code {
-    if {[%W compare {insert linestart} != {limit linestart}]} {
+    if {[%W compare {insert linestart} != {promptEnd linestart}]} {
 	tkTextSetCursor %W [tkTextUpDownLine %W -1]
     } else {
 	_event [winfo parent %W] -1
@@ -1613,11 +1613,11 @@ bind Console <<Console_NextSearch>> [namespace code {
 }]
 bind Console <<Console_Transpose>> {
     ## Transpose current and previous chars
-    if {[%W compare insert > limit]} { tkTextTranspose %W }
+    if {[%W compare insert > promptEnd]} { tkTextTranspose %W }
 }
 bind Console <<Console_ClearLine>> {
     ## Clear command line (Unix shell staple)
-    %W delete limit end
+    %W delete promptEnd end
 }
 bind Console <<Console_SaveCommand>> [namespace code {
     ## Save command buffer (swaps with current command)
@@ -1628,17 +1628,17 @@ catch {bind Console <Key-Prior>     { tkTextScrollPages %W -1 }}
 catch {bind Console <Key-Page_Down> { tkTextScrollPages %W 1 }}
 catch {bind Console <Key-Next>      { tkTextScrollPages %W 1 }}
 bind Console <$META-d> {
-    if {[%W compare insert >= limit]} {
+    if {[%W compare insert >= promptEnd]} {
 	%W delete insert {insert wordend}
     }
 }
 bind Console <$META-BackSpace> {
-    if {[%W compare {insert -1c wordstart} >= limit]} {
+    if {[%W compare {insert -1c wordstart} >= promptEnd]} {
 	%W delete {insert -1c wordstart} insert
     }
 }
 bind Console <$META-Delete> {
-    if {[%W compare insert >= limit]} {
+    if {[%W compare insert >= promptEnd]} {
 	%W delete insert {insert wordend}
     }
 }
@@ -1652,7 +1652,7 @@ bind Console <ButtonRelease-2> {
 	![catch {selection get -displayof %W \
 		-selection CLIPBOARD} tkPriv(junk)])
     } {
-	if {[%W compare @%x,%y < limit]} {
+	if {[%W compare @%x,%y < promptEnd]} {
 	    %W insert end $tkPriv(junk)
 	} else {
 	    %W insert @%x,%y $tkPriv(junk)
@@ -1671,16 +1671,16 @@ bind Console <ButtonRelease-2> {
 ## Bindings for doing special things based on certain keys
 ##
 bind PostConsole <Key-parenright> [namespace code {
-    if {[string compare \\ [%W get insert-2c]]} {MatchPair %W \( \) limit}
+    if {[string compare \\ [%W get insert-2c]]} {MatchPair %W \( \) promptEnd}
 }]
 bind PostConsole <Key-bracketright> [namespace code {
-    if {[string compare \\ [%W get insert-2c]]} {MatchPair %W \[ \] limit}
+    if {[string compare \\ [%W get insert-2c]]} {MatchPair %W \[ \] promptEnd}
 }]
 bind PostConsole <Key-braceright> [namespace code {
-    if {[string compare \\ [%W get insert-2c]]} {MatchPair %W \{ \} limit}
+    if {[string compare \\ [%W get insert-2c]]} {MatchPair %W \{ \} promptEnd}
 }]
 bind PostConsole <Key-quotedbl> [namespace code {
-    if {[string compare \\ [%W get insert-2c]]} {MatchQuote %W limit}
+    if {[string compare \\ [%W get insert-2c]]} {MatchQuote %W promptEnd}
 }]
 
 bind PostConsole <KeyPress> [namespace code {
@@ -1697,8 +1697,8 @@ bind PostConsole <KeyPress> [namespace code {
     upvar \#0 [namespace current]::[winfo parent $w] data
     if {!$data(-lightcmd)} return
     set exp "\[^\\\\\]\[\[ \t\n\r\;{}\"\$\]"
-    set i [$w search -backwards -regexp $exp insert-1c limit-1c]
-    if {[string compare {} $i]} {append i +2c} {set i limit}
+    set i [$w search -backwards -regexp $exp insert-1c promptEnd-1c]
+    if {[string compare {} $i]} {append i +2c} {set i promptEnd}
     regsub -all "\[\[\\\\\\?\\*\]" [$w get $i "insert-1c wordend"] {\\\0} c
     if {[string compare {} [EvalAttached info commands [list $c]]]} {
 	$w tag add proc $i "insert-1c wordend"
@@ -1813,7 +1813,7 @@ bind PostConsole <KeyPress> [namespace code {
     if {[string match {} $s] || [string match disabled [$w cget -state]]} {
 	return
     }
-    if {[$w comp insert < limit]} {
+    if {[$w comp insert < promptEnd]} {
 	$w mark set insert end
     }
     catch {
@@ -1838,8 +1838,8 @@ bind PostConsole <KeyPress> [namespace code {
 ## FIX: make namespace aware
 ;proc Expand {w {type ""}} {
     set exp "\[^\\\\\]\[\[ \t\n\r\\\{\"\\\\\$\]"
-    set tmp [$w search -backwards -regexp $exp insert-1c limit-1c]
-    if {[string compare {} $tmp]} {append tmp +2c} else {set tmp limit}
+    set tmp [$w search -backwards -regexp $exp insert-1c promptEnd-1c]
+    if {[string compare {} $tmp]} {append tmp +2c} else {set tmp promptEnd}
     if {[$w compare $tmp >= insert]} return
     set str [$w get $tmp insert]
     switch -glob $type {

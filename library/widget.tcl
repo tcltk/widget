@@ -272,8 +272,8 @@ namespace import -force ::Utility::get_opts*
 	set base \$data(base)
 	rename \$w \$data(container)
 	$renamingCmd
-	;proc ::\$w args \"uplevel ::Widget::handle $namesp \[list \$w\] \\\$args\"
-	#interp alias {} \$w {} ::Widget::handle $namesp \$w
+	#;proc ::\$w args \"uplevel ::Widget::handle $namesp \[list \$w\] \\\$args\"
+	interp alias {} \$w {} ::Widget::handle $namesp \$w
 
 	## Do the configuring here and eval the post initialization procedure
 	if {(\[llength \$args\] && \

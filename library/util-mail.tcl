@@ -95,7 +95,7 @@ proc smtpmail {host to from subject text} {
     gets $socket
     puts $socket DATA
     gets $socket
-    puts $socket "From: <$from>\nTo: <$recipients>Subject: $subject\n"
+    puts $socket "From: <$from>\nTo: <$recipients>\nSubject: $subject\n"
 
     foreach line [split $text \n] {
 	puts $socket [join $line]
