@@ -1,4 +1,17 @@
 2001-06-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/calculator.tcl:
+	* library/console.tcl:
+	* library/hierarchy.tcl:
+	* library/megalist.tcl:
+	* library/pane.tcl:
+	* library/progressbar.tcl:
+	* library/util-color.tcl:
+	* library/util.tcl:
+	* library/ventry.tcl: corrected code that procheck complained about
+
+	* library/util-find.tcl:
+	* library/util-list.tcl: removed - they weren't ready yet
+
 	* initial import of widget code into tcllib repository
 

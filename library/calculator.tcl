@@ -241,7 +241,7 @@ array set class {
 
     set arg1 [_pop $w]
     if {[string match {} $arg1]} { return 0 }
-    _push $w [expr 0 - $arg1]
+    _push $w [expr {0 - $arg1}]
     _push $w {}
 }
 
@@ -284,7 +284,7 @@ array set class {
 
     if {[string len $ip] > 3} {
 	set fmt {([0-9])([0-9])([0-9])}
-	switch [expr [string len $ip]%3] {
+	switch [expr {[string len $ip]%3}] {
 	    0 { regsub -all $fmt $ip {\1\2\3,} ip }
 	    1 { regsub -all $fmt $ip {\1,\2\3} ip }
 	    2 { regsub -all $fmt $ip {\1\2,\3} ip }
@@ -315,7 +315,7 @@ array set class {
     set stk [_pop $w]
     if {[string match {} $stk]} { return 0 }
     _push $w $stk
-    if $push { _push $w $stk }
+    if {$push} { _push $w $stk }
     _push $w {}
 }
 
@@ -336,12 +336,12 @@ array set class {
 ;proc _invert w {
     upvar \#0 [namespace current]::$w data
 
-    if {[string match {} [set arg1 [_pop $w]]} { return 0 }
+    if {[string match {} [set arg1 [_pop $w]]]} { return 0 }
     if {$arg1 == 0} {
 	calcerror $w "Division by 0 error"
 	return 0
     }
-    _push $w [expr 1.0 / $arg1]
+    _push $w [expr {1.0 / $arg1}]
     _push $w {}
 }
 
@@ -408,7 +408,7 @@ array set class {
     $data(data) selection set $idx $idx
     $data(data) see $idx
     if {[string compare end $data(index)]} {
-	set data(index) [expr $idx+1]
+	set data(index) [expr {$idx+1}]
     }
     return $val
 }

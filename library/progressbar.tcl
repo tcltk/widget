@@ -301,7 +301,7 @@ namespace eval ::Widget::Progressbar {;
 		[namespace code [list bartrace $w]]]
     } elseif {[catch {barset $w $var} err]} {
 	set var $data(-value)
-	if $data(-showerror) { return -code error $err }
+	if {$data(-showerror)} { return -code error $err }
     }
 }
 
@@ -321,7 +321,7 @@ namespace eval ::Widget::Progressbar {;
 	## it is upside down
 	$data(basecmd) coords bar -1 $H $W [expr {$pcnt*$H}]
     }
-    if $data(-showvalue) {
+    if {$data(-showvalue)} {
 	$data(basecmd) coords text [expr {$W/2}] [expr {$H/2-2}]
 	$data(basecmd) itemconfigure text -text \
 		[format {%5.1f%%} [expr {$pcnt*100.0}]]
@@ -413,11 +413,11 @@ namespace eval ::Widget::Progressbar {;
 # Turns #rgb into 3 elem list of decimal vals.
 ;proc parse_color c {
     set c [string tolower $c]
-    if {[regexp {^\#([0-9a-f])([0-9a-f])([0-9a-f])$} $c x r g b]} {
+    if {[regexp {^#([0-9a-f])([0-9a-f])([0-9a-f])$} $c x r g b]} {
 	# appending "0" right-shifts 4 bits
 	scan "${r}0 ${g}0 ${b}0" "%x %x %x" r g b
     } else {
-	if {![regexp {^\#([0-9a-f]+)$} $c junk hex] || \
+	if {![regexp {^#([0-9a-f]+)$} $c junk hex] || \
 		[set len [string length $hex]]>12 || $len%3 != 0} {
 	    return -code error "bad color value \"$c\""
 	}
@@ -511,12 +511,12 @@ namespace eval ::Widget::Progressbar {;
 		return -code error "-type cannot be changed after creation"
 	    }
 	    -fgstart	{
-		if {![regexp {^\#([0-9a-f]+)$} $val]} {
+		if {![regexp {^#([0-9a-f]+)$} $val]} {
 		    return -code error "color value must be in \#rgb format"
 		}
 	    }
 	    -fgfinished	{
-		if {![regexp {^\#([0-9a-f]+)$} $val]} {
+		if {![regexp {^#([0-9a-f]+)$} $val]} {
 		    return -code error "color value must be in \#rgb format"
 		}
 	    }

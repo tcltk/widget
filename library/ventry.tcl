@@ -134,7 +134,7 @@ namespace eval ::Widget::Ventry {;
     if {[regexp {^(all|key)$} $data(-validate)]} {
 	set index [$data(basecmd) index $index]
 	set cur [$data(basecmd) get]
-	set new [string range $cur 0 [expr $index-1]]$string[string range $cur $index end]
+	set new [string range $cur 0 [expr {$index-1}]]$string[string range $cur $index end]
 	if {[catch {validate $w $string $new $index insert} err]} {
 	    return
 	}
@@ -148,14 +148,14 @@ namespace eval ::Widget::Ventry {;
     if {[regexp {^(all|key)$} $data(-validate)]} {
 	set first [$data(basecmd) index $first]
 	if {[string match {} $last]} {
-	    set last [expr $first+1]
+	    set last [expr {$first+1}]
 	} else {
 	    set last [$data(basecmd) index $last]
 	}
 	set cur [$data(basecmd) get]
-	set new [string range $cur 0 [expr $first-1]][string range $cur $last end]
+	set new [string range $cur 0 [expr {$first-1}]][string range $cur $last end]
 	if {[catch {validate $w [string range $cur $first \
-		[expr $last-1]] $new $first delete} err]} {
+		[expr {$last-1}]] $new $first delete} err]} {
 	    return
 	}
     }
@@ -202,7 +202,7 @@ namespace eval ::Widget::Ventry {;
 	set code 1
     } else {
 	set val [regexp {^(1|yes|true|on)$} $result]
-	if $val { set code 0 } else { set code 3 }
+	if {$val} { set code 0 } else { set code 3 }
 	set result {}
     }
 

@@ -150,7 +150,7 @@ namespace eval ::Widget::Megalist {;
 	    -showfilters {
 		set val [regexp -nocase $truth $val]
 		if {$data(-showfilters) == $val} continue
-		if $data(-showfilters) {
+		if {$data(-showfilters)} {
 		    foreach name $data(order) {
 			pack forget $data(hold).$name.e
 		    }
@@ -164,13 +164,13 @@ namespace eval ::Widget::Megalist {;
 	    -shownames {
 		set val [regexp -nocase $truth $val]
 		if { $data(-shownames) == $val } {continue}
-		if $data(-shownames) {
+		if {$data(-shownames)} {
 		    foreach name $data(order) {
 			pack forget $data(hold).$name.b
 		    }
 		} else {
 		    set x c
-		    if [winfo exists $data(hold).$name.e] {
+		    if {[winfo exists $data(hold).$name.e]} {
 			set x e
 		    }
 		    foreach name $data(order) {
@@ -296,8 +296,8 @@ namespace eval ::Widget::Megalist {;
     set box [listbox $f.c -highlightthickness 0 -bd 0 -takefocus 0 \
 	    -yscrollcommand [namespace code [list scroll $w]] -exportsel 0]
     $f.c xview moveto 0
-    if $data(-shownames) { pack $f.b -fill x}
-    if $data(-showfilters) {pack $f.e -fill x}
+    if {$data(-shownames)}   {pack $f.b -fill x}
+    if {$data(-showfilters)} {pack $f.e -fill x}
     pack $f.c -fill both -expand 1
     pane $f -parent $data(hold) -handlelook {-bd 1 -width 2}
 
@@ -309,7 +309,7 @@ namespace eval ::Widget::Megalist {;
 
 ;proc select {w p} {
     upvar \#0 [namespace current]::$w data
-    if [string match {} [set idx [$p curselection]]] {return}
+    if {[string match {} [set idx [$p curselection]]]} {return}
     foreach i $data(order) {
 	$w.hold.$i.c selection clear 0 end
 	$w.hold.$i.c selection set $idx

@@ -259,7 +259,7 @@ namespace eval ::Widget::Hierarchy {;
     ## Private variables
     array set data [list \
 	    hasnodelook	0 \
-	    halfpstk	[expr $data(-padstack)/2] \
+	    halfpstk	[expr {$data(-padstack)/2}] \
 	    width	400 \
 	    ]
 
@@ -491,7 +491,7 @@ namespace eval ::Widget::Hierarchy {;
 	set c $data(basecmd)
 	foreach {x y x1 y1} [$c bbox $idx] {top btm} [$c yview] {
 	    set stk [lindex [$c cget -scrollregion] 3]
-	    set pos [expr (($y1+$y)/2.0)/$stk - ($btm-$top)/2.0]
+	    set pos [expr {(($y1+$y)/2.0)/$stk - ($btm-$top)/2.0}]
 	}
 	$c yview moveto $pos
     }
@@ -663,7 +663,7 @@ namespace eval ::Widget::Hierarchy {;
 	    set data(:$np,kids) {}
 	}
     }
-    if $data(hasnodelook) {
+    if {$data(hasnodelook)} {
 	set data(:$np,look) [uplevel \#0 $data(-nodelook) [list $w $np 1]]
     } else {
 	set data(:$np,look) {}
@@ -701,7 +701,7 @@ namespace eval ::Widget::Hierarchy {;
 	## Check to make sure it doesn't already exist,
 	## in case we are refreshing the node or something
 	if {![info exists data(:$knp,showkids)]} { set data(:$knp,showkids) 0 }
-	if $data(hasnodelook) {
+	if {$data(hasnodelook)} {
 	    set data(:$knp,look) [uplevel \#0 $data(-nodelook) [list $w $knp 0]]
 	} else {
 	    set data(:$knp,look) {}
@@ -1233,7 +1233,7 @@ bind Hierarchy <B2-Motion> {
 	set w [join $np {}]
 	regsub {\.\.} $w {.} w
     }
-    if {[string compare [winfo children $w] {}]} {set fg blue} {set fg black}
+    set fg [expr {([winfo children $w]=="")?{black}:{blue}}]
     return [list "\[[winfo class $w]\] [lindex $np end]" {} {} $fg]
 }
 

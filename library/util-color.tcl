@@ -28,11 +28,11 @@ namespace export -clear *
 #
 proc rgb2dec c {
     set c [string tolower $c]
-    if {[regexp {^\#([0-9a-f])([0-9a-f])([0-9a-f])$} $c x r g b]} {
+    if {[regexp {^#([0-9a-f])([0-9a-f])([0-9a-f])$} $c x r g b]} {
 	# double'ing the value make #9fc == #99ffcc
 	scan "$r$r $g$g $b$b" "%x %x %x" r g b
     } else {
-	if {![regexp {^\#([0-9a-f]+)$} $c junk hex] || \
+	if {![regexp {^#([0-9a-f]+)$} $c junk hex] || \
 		[set len [string length $hex]]>12 || $len%3 != 0} {
 	    return -code error "bad color value \"$c\""
 	}
@@ -142,18 +142,18 @@ proc complement {orig {grays 1}} {
 proc hsv2rgb {h s v} {
     if {$s <= 0.0} {
 	# achromatic
-	set v [expr int($v)]
+	set v [expr {int($v)}]
 	return "$v $v $v"
     } else {
-	set v [expr double($v)]
+	set v [expr {double($v)}]
         if {$h >= 1.0} { set h 0.0 }
-        set h [expr 6.0 * $h]
-        set f [expr double($h) - int($h)]
-        set p [expr int(256 * $v * (1.0 - $s))]
-        set q [expr int(256 * $v * (1.0 - ($s * $f)))]
-        set t [expr int(256 * $v * (1.0 - ($s * (1.0 - $f))))]
-	set v [expr int(256 * $v)]
-        switch [expr int($h)] {
+        set h [expr {6.0 * $h}]
+        set f [expr {double($h) - int($h)}]
+        set p [expr {int(256 * $v * (1.0 - $s))}]
+        set q [expr {int(256 * $v * (1.0 - ($s * $f)))}]
+        set t [expr {int(256 * $v * (1.0 - ($s * (1.0 - $f))))}]
+	set v [expr {int(256 * $v)}]
+        switch [expr {int($h)}] {
             0 { return "$v $t $p" }
             1 { return "$q $v $p" }
 	    2 { return "$p $v $t" }

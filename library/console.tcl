@@ -404,7 +404,8 @@ array set class {
 }
 if {![info exists class(active)]} { set class(active) {} }
 set class(version) [package provide Console]
-set class(WWW) [expr [info exists ::embed_args]||[info exists ::browser_args]]
+set class(WWW) [expr {[info exists ::embed_args] \
+	|| [info exists ::browser_args]}]
 
 catch {highlight}
 if {[string compare {} [info commands ::Utility::lremove]]} {
@@ -947,7 +948,7 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
 
 	pack [frame $base.f] -fill x -expand 1
 	label $base.f.l -text "Find:"
-	entry $base.f.e -textvar $V\(find\)
+	entry $base.f.e -textvar ${V}(find)
 	pack [frame $base.opt] -fill x
 	checkbutton $base.opt.c -text "Case Sensitive" -var ${V}(find,case)
 	checkbutton $base.opt.r -text "Use Regexp" -var ${V}(find,reg)
@@ -1084,7 +1085,7 @@ if {[string compare {} [info commands ::Utility::lremove]]} {
     } elseif {$pcnt == 100} {
 	$data(console) delete 1.0 end
     } else {
-	set tmp [expr $pcnt/100.0*[$data(console) index end]]
+	set tmp [expr {$pcnt/100.0*[$data(console) index end]}]
 	$data(console) delete 1.0 "$tmp linestart"
     }
     prompt $W {} $data(tmp)
@@ -1290,7 +1291,7 @@ proc ::unknown args {
             # from the "uplevel" command).
             #
             set new [split $errorInfo \n]
-            set new [join [lrange $new 0 [expr [llength $new] - 6]] \n]
+            set new [join [lrange $new 0 [expr {[llength $new] - 6}]] \n]
             return -code $status -errorcode $errorCode \
 		    -errorinfo $new $result
 
@@ -1364,7 +1365,7 @@ proc ::tcl_unknown args {
 		#
 
 		set new [split $errorInfo \n]
-		set new [join [lrange $new 0 [expr [llength $new] - 6]] \n]
+		set new [join [lrange $new 0 [expr {[llength $new] - 6}]] \n]
 		return -code error -errorcode $errorCode \
 			-errorinfo $new $msg
 	    } else {
@@ -1774,7 +1775,7 @@ bind PostConsole <KeyPress> [namespace code {
 	if {!$j} {set i0 $i}
 	incr j
     }
-    if {[expr $j%2]} {
+    if {$j & 1} {
 	if {$data(-blinkrange)} {
 	    blink $w $data(-blinktime) $i0 [$w index insert]
 	} else {

@@ -81,7 +81,7 @@ proc pane {opt args} {
 			set i [lsearch -exact $PANE($p,w) $w]
 			set PANE($p,w) [lreplace $PANE($p,w) $i $i]
 		    }
-		    if [llength $PANE($p,w)] {
+		    if {[llength $PANE($p,w)]} {
 			eval pane_config $PANE($p,w)
 		    } else {
 			pane forget $p
@@ -95,8 +95,8 @@ proc pane {opt args} {
 	s* {
 	    if {[info exists PANE($args,w)]} {
 		return $PANE($args,w)
-	    } {
-		return {}
+	    } else {
+		return
 	    }
 	}
 	m* {
@@ -126,7 +126,7 @@ proc pane {opt args} {
     set wids {}
     for {set i 0;set num [llength $args];set cargs {}} {$i<$num} {incr i} {
 	set arg [lindex $args $i]
-	if [winfo exists $arg] { lappend wids $arg; continue }
+	if {[winfo exists $arg]} { lappend wids $arg; continue }
 	set val [lindex $args [incr i]]
 	switch -glob -- $arg {
 	    -d*	{ set opt(dyn) [regexp -nocase {^(1|yes|true|on)$} $val] }
@@ -155,7 +155,7 @@ proc pane {opt args} {
     } else {
 	set owh width; set wh height; set xy y; set hv v
     }
-    if ![info exists PANE($p,w)] { set PANE($p,w) {} }
+    if {![info exists PANE($p,w)]} { set PANE($p,w) {} }
     foreach w [winfo children $p] {
 	if {[string match *.__h* $w]} { destroy $w }
     }
@@ -200,7 +200,7 @@ proc pane {opt args} {
 	    W0 $w0 W1 $w1 XY0 $t0 XY1 [expr {$t1+$t2}] \
 	    C0 [expr {$t0+$offset}] C1 [expr {$t1+$t2-$offset}]]
     bind $h <B1-Motion> "pane_motion %[string toup $xy] $p $h $wh $xy $d"
-    if !$d {
+    if {!$d} {
 	bind $h <ButtonRelease-1> \
 		"pane_motion %[string toup $xy] $p $h $wh $xy 1"
     }
@@ -211,7 +211,7 @@ proc pane {opt args} {
     set f [expr {($X-$PANE(XY))/$PANE(WH)}]
     if {$f<$PANE(C0)} { set f $PANE(C0) }
     if {$f>$PANE(C1)} { set f $PANE(C1) }
-    if $d {
+    if {$d} {
 	place $PANE(W0) -rel$wh [expr {$f-$PANE(XY0)}]
 	place $h -rel$xy $f
 	place $PANE(W1) -rel$wh [expr {$PANE(XY1)-$f}] -rel$xy $f

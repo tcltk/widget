@@ -57,12 +57,12 @@ foreach namesp [namespace children [namespace current]] {
 proc xsplit [list str [list regexp "\[\t \r\n\]+"]] {
     set list  {}
     while {[regexp -indices -- $regexp $str match submatch]} {
-        lappend list [string range $str 0 [expr [lindex $match 0] -1]]
+        lappend list [string range $str 0 [expr {[lindex $match 0]-1}]]
         if {[lindex $submatch 0]>=0} {
             lappend list [string range $str [lindex $submatch 0]\
-                    [lindex $submatch 1]] 
-        }       
-        set str [string range $str [expr [lindex $match 1]+1] end] 
+                    [lindex $submatch 1]]
+        }
+        set str [string range $str [expr {[lindex $match 1]+1}] end] 
     }
     lappend list $str
     return $list
@@ -779,7 +779,7 @@ interp alias {} ::Utility::dir {} namespace inscope ::Utility ls
 	set result [string match $regform $val]
     }
 
-    if [string compare $fill {}] {
+    if {[string compare $fill {}]} {
 	upvar $fill fvar
 	if {$result} {
 	    set fvar $val[string range $format $i end]
@@ -788,7 +788,7 @@ interp alias {} ::Utility::dir {} namespace inscope ::Utility ls
 	}
     }
 
-    if [string compare $best {}] {
+    if {[string compare $best {}]} {
 	upvar $best bvar
 	set bvar $val
 	set len [string length $bvar]
