@@ -251,6 +251,18 @@ proc hierarchy_registry {w args} {
 }
 }
 
+# Tk 8.4 makes previously exposed stuff private.
+# FIX: Update tkcon to not rely on the private Tk code.
+#
+if {![llength [info globals tkPriv]]} {
+    ::tk::unsupported::ExposePrivateVariable tkPriv
+}
+foreach cmd {tkCancelRepeat} {
+    if {![llength [info commands $cmd]]} {
+        ::tk::unsupported::ExposePrivateCommand $cmd
+    }
+}
+
 namespace eval ::Widget::Hierarchy {;
 
 ;proc construct w {
@@ -827,7 +839,7 @@ namespace eval ::Widget::Hierarchy {;
 		$c itemconfigure img:$np -image $img
 		lappend tags $img
 		foreach {x y img_width img_height} [$c bbox img:$np] {
-		    incr img_width -$x; incr img_height -$y
+		    incr img_width [expr {-$x}]; incr img_height [expr {-$y}]
 		}
 	    }
 	}
@@ -840,7 +852,7 @@ namespace eval ::Widget::Hierarchy {;
 	    $c itemconfigure txt:$np -fill $fg -text $txt -font $font
 	    if {[string compare $np $txt]} { lappend tags $txt }
 	    foreach {x y txt_width txt_height} [$c bbox txt:$np] {
-		incr txt_width -$x; incr txt_height -$y
+		incr txt_width [expr {-$x}]; incr txt_height [expr {-$y}]
 	    }
 	}
 	if {[string match {} [$c find withtag box:$np]]} {

@@ -765,8 +765,13 @@ namespace import -force ::Utility::get_opts*
 
 namespace eval :: {
     namespace import -force ::Widget::widget
-    catch {tkFocusOK .}; # we want this auto-loaded
-    interp alias {} tkFocusOK {} widget tkFocusOK
+    if {$tk_version < 8.4} {
+	catch {tkFocusOK .}; # we want this auto-loaded
+	interp alias {} tkFocusOK {} widget tkFocusOK
+    } else {
+	catch {tk::FocusOK .}; # we want this auto-loaded
+	interp alias {} tk::FocusOK {} widget tkFocusOK
+    }
 }
 
 ########################################################################

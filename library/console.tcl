@@ -388,6 +388,18 @@ array set class [list version [package provide Console]]
 ## END CONSOLE DIALOG
 ##
 
+# Tk 8.4 makes previously exposed stuff private.
+# FIX: Update tkcon to not rely on the private Tk code.
+#
+if {![llength [info globals tkPriv]]} {
+    ::tk::unsupported::ExposePrivateVariable tkPriv
+}
+foreach cmd {tkTextScrollPages tkTextTranspose tkTextUpDownLine tkTextSetCursor} {
+    if {![llength [info commands $cmd]]} {
+        ::tk::unsupported::ExposePrivateCommand $cmd
+    }
+}
+
 ##
 ## CONSOLE MEGAWIDGET
 ##
