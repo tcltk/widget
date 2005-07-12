@@ -409,7 +409,7 @@ namespace eval ::Widget::Console {;
 variable class
 array set class {
     release	{December 1998}
-    contact	"jeff.hobbs@acm.org"
+    contact	"jeff at hobbs org"
     docs	"http://tkcon.sourceforge.net/"
     slavealias	{ console }
     slaveprocs	{ alias dir dump lremove puts echo unknown tcl_unknown which }

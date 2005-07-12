@@ -65,7 +65,7 @@ proc dec2rgb {r {g 0} {b UNSET} {clip 0}} {
 	} else {
 	    foreach {r g b} [winfo rgb . $r] {break}
 	}
-    } 
+    }
     set max 255
     set len 2
     if {($r > 255) || ($g > 255) || ($b > 255)} {

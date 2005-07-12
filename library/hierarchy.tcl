@@ -1,6 +1,6 @@
 ##
 ## Layout routines taken from oooold code, author unkown.
-## Copyright 1995-1998 Jeffrey Hobbs, jeff.hobbs@acm.org
+## Copyright 1995-1998 Jeffrey Hobbs, jeff at hobbs org
 ##
 ## Last Update: 28 June 1997
 ##

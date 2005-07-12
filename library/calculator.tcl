@@ -1,5 +1,5 @@
 ##
-## Copyright 1996-1997 Jeffrey Hobbs, jeff.hobbs@acm.org
+## Copyright 1996-1997 Jeffrey Hobbs, jeff at hobbs org
 ##
 ## WORK IN PROGRESS - NOT FUNCTIONAL
 ##

@@ -1,6 +1,6 @@
 ## Barebones requirements for creating and querying megawidgets
 ##
-## Copyright 1997-9 Jeffrey Hobbs, jeff.hobbs@acm.org
+## Copyright 1997-9 Jeffrey Hobbs, jeff at hobbs org
 ##
 ## Initiated: 5 June 1997
 ## Last Update: 1999
@@ -87,17 +87,18 @@ package provide Widget 2.0
 ## Dummy call for indexers
 proc widget args {}
 
-namespace eval ::Widget {;
+namespace eval ::Widget {
 
-namespace export -clear widget
-variable CLASSES
-variable CONTAINERS {frame toplevel}
-namespace import -force ::Utility::get_opts*
+    namespace export -clear widget
+    variable CLASSES
+    variable CONTAINERS {frame toplevel}
+    namespace import -force ::Utility::get_opts*
+}
 
-;proc widget {cmd args} {
+proc ::Widget::widget {cmd args} {
     ## Establish the prefix of public commands
     set prefix [namespace current]::_
-    if {[string match {} [set arg [info commands $prefix$cmd]]]} {
+    if {[string equal {} [set arg [info commands $prefix$cmd]]]} {
 	set arg [info commands $prefix$cmd*]
     }
     switch [llength $arg] {
@@ -116,7 +117,7 @@ namespace import -force ::Utility::get_opts*
     }
 }
 
-;proc verify_class {CLASS} {
+proc ::Widget::verify_class {CLASS} {
     variable CLASSES
     if {![info exists CLASSES($CLASS)]} {
 	return -code error "no known class \"$CLASS\""
@@ -124,7 +125,7 @@ namespace import -force ::Utility::get_opts*
     return
 }
 
-;proc _add {CLASS what args} {
+proc ::Widget::_add {CLASS what args} {
     variable CLASSES
     verify_class $CLASS
     if {[string match ${what}* options]} {
@@ -135,30 +136,30 @@ namespace import -force ::Utility::get_opts*
     }
 }
 
-;proc _find_class {CLASS {root .}} {
-    if {[string match $CLASS [winfo class $root]]} {
+proc ::Widget::_find_class {CLASS {root .}} {
+    if {[string equal $CLASS [winfo class $root]]} {
 	return $root
     } else {
 	foreach w [winfo children $root] {
 	    set w [_find_class $CLASS $w]
-	    if {[string compare {} $w]} {
+	    if {![string equal {} $w]} {
 		return $w
 	    }
 	}
     }
 }
 
-;proc _delete {CLASS what args} {
+proc ::Widget::_delete {CLASS what args} {
     variable CLASSES
     verify_class $CLASS
 }
 
-;proc _classes {{pattern "*"}} {
+proc ::Widget::_classes {{pattern "*"}} {
     variable CLASSES
     return [array names CLASSES $pattern]
 }
 
-;proc _value {CLASS key} {
+proc ::Widget::_value {CLASS key} {
     variable CLASSES
     verify_class $CLASS
     upvar \#0 $CLASSES($CLASS)::class class
@@ -173,9 +174,9 @@ namespace import -force ::Utility::get_opts*
 ## Handles the method calls for a widget.  This is the command to which
 ## all megawidget dummy commands are redirected for interpretation.
 ##
-;proc handle {namesp w subcmd args} {
+proc ::Widget::handle {namesp w subcmd args} {
     upvar \#0 ${namesp}::$w data
-    if {[string match {} [set arg [info commands ${namesp}::_$subcmd]]]} {
+    if {[string equal {} [set arg [info commands ${namesp}::_$subcmd]]]} {
 	set arg [info commands ${namesp}::_$subcmd*]
     }
     set num [llength $arg]
@@ -196,12 +197,12 @@ namespace import -force ::Utility::get_opts*
 ## Constructs the megawidget instance instantiation proc based on the
 ## current knowledge of the megawidget. 
 ##
-;proc construct {namesp CLASS} {
+proc ::Widget::construct {namesp CLASS} {
     upvar \#0 ${namesp}::class class \
 	    ${namesp}::components components
 
     lappend dataArrayVals [list class $CLASS]
-    if {[string compare $class(type) $class(base)]} {
+    if {![string equal $class(type) $class(base)]} {
 	## If -type and -base don't match, we need a special setup
 	lappend dataArrayVals "base \$w.[list [lindex $components(base) 1]]" \
 		"basecmd ${namesp}::\$w.[list [lindex $components(base) 1]]" \
@@ -213,15 +214,15 @@ namespace import -force ::Utility::get_opts*
 	## a bug in Tcl7/8 when renaming aliases
 	#interp alias {} \$base {} ::Widget::handle $namesp \$w
 	set renamingCmd "rename \$base \$data(basecmd)
-	;proc ::\$base args \"uplevel ::Widget::handle $namesp \[list \$w\] \\\$args\"
+	proc ::\$base args \"uplevel ::Widget::handle $namesp \[list \$w\] \\\$args\"
 	bindtags \$base \[linsert \[bindtags \$base\] 1\
-		[expr {[string match toplevel $class(type)]?{}:{$w}}] $CLASS\]"
+		[expr {[string equal toplevel $class(type)]?{}:{$w}}] $CLASS\]"
     } else {
 	## -type and -base are the same, we only create for one
 	lappend dataArrayVals "base \$w" \
 		"basecmd ${namesp}::\$w" \
 		"container ${namesp}::\$w"
-	if {[string compare {} [lindex $components(base) 3]]} {
+	if {![string equal {} [lindex $components(base) 3]]} {
 	    lappend dataArrayVals "[lindex $components(base) 3] \$w"
 	}
 	## When the base widget and container are the same, we have a
@@ -230,13 +231,13 @@ namespace import -force ::Utility::get_opts*
     }
     set baseConstruction {}
     foreach name [array names components] {	
-	if {[string match base $name]} {
+	if {[string equal base $name]} {
 	    continue
 	}
 	foreach {type wid opts} $components($name) break
 	lappend dataArrayVals "[list $name] \$w.[list $wid]"
 	lappend baseConstruction "$type \$w.[list $wid] $opts"
-	if {[string match toplevel $type]} {
+	if {[string equal toplevel $type]} {
 	    lappend baseConstruction "wm withdraw \$data($name)"
 	}
     }
@@ -246,11 +247,11 @@ namespace import -force ::Utility::get_opts*
 
     ## More of this proc could be configured ahead of time for increased
     ## construction speed.  It's delicate, so handle with extreme care.
-    ;proc ${namesp}::$CLASS {w args} [subst {
+    proc ${namesp}::$CLASS {w args} [subst {
 	variable options
 	upvar \#0 ${namesp}::\$w data
 	$class(type) \$w -class $CLASS
-	[expr [string match toplevel $class(type)]?{wm withdraw \$w\n}:{}]
+	[expr [string equal toplevel $class(type)]?{wm withdraw \$w\n}:{}]
 	## Populate data array with user definable options
 	foreach o \[array names options\] {
 	    if {\[string match -* \$options(\$o)\]} continue
@@ -272,7 +273,7 @@ namespace import -force ::Utility::get_opts*
 	set base \$data(base)
 	rename \$w \$data(container)
 	$renamingCmd
-	#;proc ::\$w args \"uplevel ::Widget::handle $namesp \[list \$w\] \\\$args\"
+	#proc ::\$w args \"uplevel ::Widget::handle $namesp \[list \$w\] \\\$args\"
 	interp alias {} \$w {} ::Widget::handle $namesp \$w
 
 	## Do the configuring here and eval the post initialization procedure
@@ -288,7 +289,7 @@ namespace import -force ::Utility::get_opts*
     ]
 }
 
-;proc add_options {namesp CLASS optlist} {
+proc ::Widget::add_options {namesp CLASS optlist} {
     upvar \#0 ${namesp}::class class \
 	    ${namesp}::options options \
 	    ${namesp}::widgets widgets
@@ -322,14 +323,14 @@ namespace import -force ::Utility::get_opts*
 			    $CLASS component type \"$type\" option \"$opt\":\
 			    component type does not exist"
 		} elseif {![info exists config($type)]} {
-		    if {[string compare toplevel $type]} {
+		    if {![string equal toplevel $type]} {
 			set w .__widget__$type
 			catch {destroy $w}
 			## Make sure the component widget type exists,
 			## returns the widget name,
 			## and accepts configure as a subcommand
 			if {[catch {$type $w} result] || \
-				[string compare $result $w] || \
+				![string equal $result $w] || \
 				[catch {$w configure} config($type)]} {
 			    ## Make sure we destroy it if it was a bad widget
 			    catch {destroy $w}
@@ -369,8 +370,8 @@ namespace import -force ::Utility::get_opts*
     }
 }
 
-;proc _create {CLASS args} {
-    if {![string match {[A-Z]*} $CLASS] || [string match { } $CLASS]} {
+proc ::Widget::_create {CLASS args} {
+    if {![string match {[A-Z]*} $CLASS] || [string equal { } $CLASS]} {
 	return -code error "invalid class name \"$CLASS\": it must begin\
 		with a capital letter and contain no spaces"
     }
@@ -422,8 +423,8 @@ namespace import -force ::Utility::get_opts*
     if {[info exists classopts(-base)]} {
 	## We check to see that we can create the base, that it returns
 	## the same widget value we put in, and that it accepts cget.
-	if {[string match toplevel $classopts(-base)] && \
-		[string compare toplevel $classopts(-type)]} {
+	if {[string equal toplevel $classopts(-base)] && \
+		![string equal toplevel $classopts(-type)]} {
 	    return -code error "\"toplevel\" is not allowed as the base\
 		    widget of a megawidget (perhaps you intended it to\
 		    be the class type)"
@@ -478,10 +479,10 @@ namespace import -force ::Utility::get_opts*
 	    return -code error "no specified parent for $CLASS class\
 		    component widget name \"$wid\""
 	}
-	if {[string match base $type]} {
+	if {[string equal base $type]} {
 	    set type $class(base)
 	    set components(base) [list $type $wid $opts $name]
-	    if {[string match $type $class(type)]} continue
+	    if {[string equal $type $class(type)]} continue
 	}
 	set components($name) [list $type $wid $opts]
 	set widnames($wid) 0
@@ -507,7 +508,7 @@ namespace import -force ::Utility::get_opts*
 	## The [winfo class %W] will work in this Destroy, which is necessary
 	## to determine if we are destroying the actual megawidget container.
 	bind $CLASS <Destroy> [namespace code {
-	    if {[string compare {} [::widget classes [::winfo class %W]]]} {
+	    if {![string equal {} [::widget classes [::winfo class %W]]]} {
 		if [catch {_destruct %W} err] { puts $err }
 	    }
 	}]
@@ -525,8 +526,8 @@ namespace import -force ::Utility::get_opts*
     ## These are provided so that errors due to lack of the command
     ## existing don't arise.  Since they are stubbed out here, the
     ## user can't depend on 'unknown' or 'auto_load' to get this proc.
-    if {[string match {} [info commands ${namesp}::construct]]} {
-	;proc ${namesp}::construct {w} {
+    if {[string equal {} [info commands ${namesp}::construct]]} {
+	proc ${namesp}::construct {w} {
 	    # the user should rewrite this
 	    # without the following error, a simple megawidget that was just
 	    # a frame would be created by default
@@ -534,15 +535,15 @@ namespace import -force ::Utility::get_opts*
 		    [lindex [info level 0] 0] function"
 	}
     }
-    if {[string match {} [info commands ${namesp}::init]]} {
-	;proc ${namesp}::init {w} {
+    if {[string equal {} [info commands ${namesp}::init]]} {
+	proc ${namesp}::init {w} {
 	    # the user should rewrite this
 	}
     }
 
     ## The user is not supposed to change this proc
     set comps [lsort [array names components]]
-    ;proc ${namesp}::_subwidget {w {widget return} args} [subst {
+    proc ${namesp}::_subwidget {w {widget return} args} [subst {
 	variable \$w
 	upvar 0 \$w data
 	switch -- \$widget {
@@ -575,7 +576,7 @@ namespace import -force ::Utility::get_opts*
     ## The user is not supposed to change this proc
     ## Instead they create a ::Widget::$CLASS::destruct proc
     ## Some of this may be redundant, but at least it does the job
-    ;proc ${namesp}::_destruct {w} "
+    proc ${namesp}::_destruct {w} "
     upvar \#0 ${namesp}::\$w data
     catch {${namesp}::destruct \$w}
     catch {::destroy \$data(base)}
@@ -586,15 +587,15 @@ namespace import -force ::Utility::get_opts*
     catch {unset data}
     return\n"
     
-    if {[string match {} [info commands ${namesp}::destruct]]} {
+    if {[string equal {} [info commands ${namesp}::destruct]]} {
 	## The user can optionally provide a special destroy handler
-	;proc ${namesp}::destruct {w args} {
+	proc ${namesp}::destruct {w args} {
 	    # empty
 	}
     }
 
     ## The user is not supposed to change this proc
-    ;proc ${namesp}::_cget {w args} {
+    proc ${namesp}::_cget {w args} {
 	if {[llength $args] != 1} {
 	    return -code error "wrong \# args: should be \"$w cget option\""
 	}
@@ -603,7 +604,7 @@ namespace import -force ::Utility::get_opts*
 	if {[info exists options($args)]&&[string match -* $options($args)]} {
 	    set args $options($args)
 	}
-	if {[string match {} [set arg [array names data $args]]]} {
+	if {[string equal {} [set arg [array names data $args]]]} {
 	    set arg [array names data ${args}*]
 	}
 	set num [llength $arg]
@@ -621,7 +622,7 @@ namespace import -force ::Utility::get_opts*
 
     ## The user is not supposed to change this proc
     ## Instead they create a $CLASS:configure proc
-    ;proc ${namesp}::_configure {w args} {
+    proc ${namesp}::_configure {w args} {
 	set namesp [namespace current]
 	upvar \#0 ${namesp}::$w data ${namesp}::options options \
 		${namesp}::components components
@@ -633,7 +634,7 @@ namespace import -force ::Utility::get_opts*
 		    [string match -* $options($args)]} {
 		set args $options($args)
 	    }
-	    if {[string match {} [set arg [array names data $args]]]} {
+	    if {[string equal {} [set arg [array names data $args]]]} {
 		set arg [array names data ${args}*]
 	    }
 	    set num [llength $arg]
@@ -662,7 +663,7 @@ namespace import -force ::Utility::get_opts*
 			[string match -* $options($key)]} {
 		    set key $options($key)
 		}
-		if {[string match {} [set arg [array names data $key]]]} {
+		if {[string equal {} [set arg [array names data $key]]]} {
 		    set arg [array names data $key*]
 		}
 		set len [llength $arg]
@@ -679,7 +680,7 @@ namespace import -force ::Utility::get_opts*
 		uplevel ${namesp}::configure [list $w] $widargs
 	    }
 #	    if {[llength $cmdargs]} {
-#		;proc _configure {w args} {
+#		proc _configure {w args} {
 #		    catch {uplevel [list $w] configure $args}
 #		    set n [namespace current]
 #		    foreach c [winfo children $w] {
@@ -718,9 +719,9 @@ namespace import -force ::Utility::get_opts*
 	}
     }
 
-    if {[string match {} [info commands ${namesp}::configure]]} {
+    if {[string equal {} [info commands ${namesp}::configure]]} {
 	## The user is intended to rewrite this one
-	;proc ${namesp}::configure {w args}  {
+	proc ${namesp}::configure {w args}  {
 	    foreach {key val} $args {
 		puts "$w: configure $key to [list $value]"
 	    }
@@ -733,7 +734,7 @@ namespace import -force ::Utility::get_opts*
 
 # Redefine private Tk function tkFocusOK to recognize our widgets
 #
-;proc _tkFocusOK w {
+proc ::Widget::_tkFocusOK w {
     if {[llength [info commands widget]] && \
 	    [llength [widget classes [winfo class $w]]]} {
 	return 0
@@ -760,8 +761,6 @@ namespace import -force ::Utility::get_opts*
     }
     regexp Key|Focus "[bind $w] [bind [winfo class $w]]"
 }
-
-}; #end namespace ::Widget
 
 namespace eval :: {
     namespace import -force ::Widget::widget
@@ -943,7 +942,7 @@ widget create ScrolledText -type frame -base text -components {
 
 namespace eval ::Widget::ScrolledText {;
 
-;proc construct {w} {
+proc construct {w} {
     upvar \#0 [namespace current]::$w data
 
     grid $data(text) $data(yscrollbar) -sticky news
@@ -954,13 +953,12 @@ namespace eval ::Widget::ScrolledText {;
     bind $data(text) <Configure> [namespace code [list resize $w 1]]
 }
 
-;proc configure {w args} {
+proc configure {w args} {
     upvar \#0 [namespace current]::$w data
-    set truth {^(1|yes|true|on)$}
     foreach {key val} $args {
 	switch -- $key {
 	    -autoscrollbar	{
-		set data($key) [regexp -nocase $truth $val]
+		set data($key) [string is true -strict $val]
 		if {$data($key)} {
 		    resize $w 0
 		} else {
@@ -973,7 +971,7 @@ namespace eval ::Widget::ScrolledText {;
 }
 
 # captures xview commands to the text widget
-;proc _xview {w args} {
+proc _xview {w args} {
     upvar \#0 [namespace current]::$w data
     if {[catch {uplevel $data(basecmd) xview $args} err]} {
 	return -code error $err
@@ -981,19 +979,19 @@ namespace eval ::Widget::ScrolledText {;
 }
 
 # captures yview commands to the text widget
-;proc _yview {w args} {
+proc _yview {w args} {
     upvar \#0 [namespace current]::$w data
     if {[catch {uplevel $data(basecmd) yview $args} err]} {
 	return -code error $err
     } elseif {![winfo ismapped $data(xscrollbar)] && \
-	    [string compare {0 1} [$data(basecmd) xview]]} {
+	    ![string equal {0 1} [$data(basecmd) xview]]} {
 	## If the xscrollbar was unmapped, but is now needed, show it
 	grid $data(xscrollbar)
     }
 }
 
 # captures insert commands to the text widget
-;proc _insert {w args} {
+proc _insert {w args} {
     upvar \#0 [namespace current]::$w data
     set code [catch {uplevel $data(basecmd) insert $args} err]
     if {[winfo ismapped $w]} { resize $w 0 }
@@ -1001,7 +999,7 @@ namespace eval ::Widget::ScrolledText {;
 }
 
 # captures delete commands to the text widget
-;proc _delete {w args} {
+proc _delete {w args} {
     upvar \#0 [namespace current]::$w data
     set code [catch {uplevel $data(basecmd) delete $args} err]
     if {[winfo ismapped $w]} { resize $w 1 }
@@ -1010,7 +1008,7 @@ namespace eval ::Widget::ScrolledText {;
 
 # called when the ScrolledText widget is resized by the user or possibly
 # needs the scrollbars (de|at)tached due to insert/delete.
-;proc resize {w d} {
+proc resize {w d} {
     upvar \#0 [namespace current]::$w data
     ## Only when deleting should we consider removing the scrollbars
     if {!$data(-autoscrollbar)} return
@@ -1021,12 +1019,12 @@ namespace eval ::Widget::ScrolledText {;
     set W $data(text)
     set bind [bind $W <Configure>]
     bind $W <Configure> {}
-    if {[string compare {0 1} [$base xview]]} {
+    if {![string equal {0 1} [$base xview]]} {
 	grid $data(xscrollbar)
     } elseif {$d} {
 	grid remove $data(xscrollbar)
     }
-    if {[string compare {0 1} [$base yview]]} {
+    if {![string equal {0 1} [$base yview]]} {
 	grid $data(yscrollbar)
     } elseif {$d} {
 	grid remove $data(yscrollbar)

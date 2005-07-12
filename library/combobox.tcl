@@ -1,5 +1,5 @@
 ##
-## Copyright 1996-8 Jeffrey Hobbs, jeff.hobbs@acm.org
+## Copyright 1996-8 Jeffrey Hobbs, jeff at hobbs org
 ##
 package require Widget 2.0
 package provide Combobox 2.0

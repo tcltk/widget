@@ -1,7 +1,7 @@
 ## Paned Window Procs inspired by code by Stephen Uhler @ Sun.
 ## Thanks to John Ellson (ellson@lucent.com) for bug reports & code ideas.
 ##
-## Copyright 1996-1997 Jeffrey Hobbs, jeff.hobbs@acm.org
+## Copyright 1996-1997 Jeffrey Hobbs, jeff at hobbs org
 ##
 package provide Pane 1.0
 

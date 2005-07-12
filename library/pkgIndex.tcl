@@ -1,6 +1,6 @@
 # Tcl package index file, version 1.0
 
-package ifneeded AllWidgets 1.0 {
+package ifneeded AllWidgets 2.0 {
     package require Widget
     package require BalloonHelp
     package require Calculator
@@ -12,7 +12,7 @@ package ifneeded AllWidgets 1.0 {
     package require Progressbar
     package require Tabnotebook
     package require Ventry
-    package provide AllWidgets 1.0
+    package provide AllWidgets 2.0
 }
 
 package ifneeded BalloonHelp 2.0 [list tclPkgSetup $dir BalloonHelp 2.0 {

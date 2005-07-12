@@ -1,6 +1,6 @@
 ## self-validating entry widget
 ##
-## Copyright 1997-8 Jeffrey Hobbs, jeff.hobbs@acm.org, CADIX International
+## Copyright 1997-8 Jeffrey Hobbs, jeff at hobbs org, CADIX International
 ##
 package require Widget 2.0
 package provide Ventry 2.0

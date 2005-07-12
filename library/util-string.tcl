@@ -135,7 +135,7 @@ proc reverse s {
 #   is longer than $len chars.  Does not preserve paragraph boundaries.
 #
 ;proc wrap_lines "txt {len 75} {P \n\n} {P2 \254}" {
-    # @author Jeffrey Hobbs <jeff.hobbs@acm.org>
+    # @author Jeffrey Hobbs <jeff at hobbs org>
     #
     # @c Wraps the given <a text> into multiple lines not
     # @c exceeding <a len> characters each. Lines shorter
